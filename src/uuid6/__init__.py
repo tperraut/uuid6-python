@@ -7,7 +7,7 @@ https://github.com/uuid6/uuid6-ietf-draft.
 import secrets
 import time
 from typing import Tuple
-from uuid import UUID, SafeUUID
+from uuid import UUID
 
 
 class DraftUUID(UUID):
@@ -20,9 +20,7 @@ class DraftUUID(UUID):
         bytes_le: bytes = None,
         fields: Tuple[int, int, int, int, int, int] = None,
         int: int = None,
-        version: int = None,
-        *,
-        is_safe=SafeUUID.unknown
+        version: int = None
     ) -> None:
         r"""Create a UUID."""
 
@@ -33,8 +31,7 @@ class DraftUUID(UUID):
                 bytes_le=bytes_le,
                 fields=fields,
                 int=int,
-                version=version,
-                is_safe=is_safe,
+                version=version
             )
         if not 0 <= int < 1 << 128:
             raise ValueError("int is out of range (need a 128-bit value)")
@@ -47,7 +44,7 @@ class DraftUUID(UUID):
             # Set the version number.
             int &= ~(0xF000 << 64)
             int |= version << 76
-        super().__init__(int=int, is_safe=is_safe)
+        super().__init__(int=int)
 
     @property
     def subsec(self) -> int:
