@@ -83,6 +83,21 @@ _last_v6_timestamp = None
 _last_v7_timestamp = None
 
 
+def _time_wrap_ns(sym_base):
+    sym_ns = sym_base + "_ns"
+    if hasattr(time, sym_ns):
+        # Use ns function if possible
+        return getattr(time, sym_ns)
+    else:
+        # Otherwise, create a wrapper to convert it
+        # This is necessary on Python < 3.7
+        func = getattr(time, sym_base)
+        return lambda: int(func() * 1_000_000_000)
+
+
+get_time_ns = _time_wrap_ns("process_time")
+
+
 def uuid6(clock_seq: int = None) -> UUID:
     r"""Generate a UUID from sequence number, and the current time.
     If 'clock_seq' is given, it is used as the sequence number;
@@ -90,7 +105,7 @@ def uuid6(clock_seq: int = None) -> UUID:
 
     global _last_v6_timestamp
 
-    nanoseconds = time.time_ns()
+    nanoseconds = get_time_ns()
     # 0x01b21dd213814000 is the number of 100-ns intervals between the
     # UUID epoch 1582-10-15 00:00:00 and the Unix epoch 1970-01-01 00:00:00.
     timestamp = nanoseconds // 100 + 0x01B21DD213814000
@@ -120,7 +135,7 @@ def uuid7() -> UUID:
 
     global _last_v7_timestamp
 
-    nanoseconds = time.time_ns()
+    nanoseconds = get_time_ns()
     if _last_v7_timestamp is not None and nanoseconds <= _last_v7_timestamp:
         nanoseconds = _last_v7_timestamp + 1
     _last_v7_timestamp = nanoseconds
@@ -138,3 +153,7 @@ def uuid7() -> UUID:
     uuid_int |= subsec_c << 56
     uuid_int |= rand
     return DraftUUID(int=uuid_int, version=7)
+
+
+if __name__ == '__main__':
+    print(uuid7())
